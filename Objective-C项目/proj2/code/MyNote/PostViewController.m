@@ -9,16 +9,23 @@
 #import <Foundation/Foundation.h>
 #import "PostViewController.h"
 
-static PostViewController * onlyPost;
-static UITableView *table;
-static RecordStorage *store0;
-static UIViewController * vc1;
-static UINavigationController * nav1;
 
 @implementation PostViewController
+
++ (PostViewController *)getInstance{
+    static PostViewController *instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[self alloc] init];
+        [instance setAddButton];
+        [instance setBtnClearAndPost];
+    });
+    return instance;
+}
+
+#pragma mark --set PostViewController UI
 -(instancetype)init{
     _r0 = nil;
-
     self.navigationItem.title = @"新建打卡";
     [self setUI];
     _view1 = [[UIView alloc]initWithFrame:CGRectMake(0, 0,[UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height)];
@@ -60,25 +67,6 @@ static UINavigationController * nav1;
     self.nav = [[UINavigationController alloc]initWithRootViewController:self];
     [self.view addSubview:_view1];
     return self;
-}
-
--(void)setOnlyPost{
-    onlyPost = self;
-}
-
--(void)setTableView:(UITableView *)table0{
-    table = table0;
-}
-
--(void)setStore:(RecordStorage *)store1{
-    store0 = store1;
-}
-
--(void)setVc1:(UIViewController *)vc{
-    vc1 = vc;
-}
--(void) setVc1Nav:(UINavigationController *) nav{
-    nav1 = nav;
 }
 
 
@@ -142,6 +130,7 @@ static UINavigationController * nav1;
     NSLog(@"addButton click");
     [self presentViewController:_imagePicker animated:YES completion:nil];
 }
+
 // 获取调用完imagePicker返回的图像并展示，同时将添加按钮右移
 - (void)imagePickerController:(UIImagePickerController*)picker
 didFinishPickingMediaWithInfo:(NSDictionary<NSString*,id>*)info {
@@ -238,7 +227,7 @@ didFinishPickingMediaWithInfo:(NSDictionary<NSString*,id>*)info {
 -(UIImage *)getImgWithName1:(NSString*)name1 withName2:(NSString*)name2{
                 NSString *imgName = [NSString stringWithFormat:@"%@_%@.jpg",name1,name2];
     // 图片路径
-    NSString *imagePath = [store0.imageCachePath stringByAppendingPathComponent:imgName];
+    NSString *imagePath = [[RecordStorage getInstance].imageCachePath stringByAppendingPathComponent:imgName];
     UIImage *img = [UIImage imageWithContentsOfFile:imagePath];
     return img;
 }
@@ -280,23 +269,23 @@ didFinishPickingMediaWithInfo:(NSDictionary<NSString*,id>*)info {
 -(void)turnToEditorView{
     self.tabBarController.selectedIndex=1;//tabBarController
     _addButton.enabled=true;
-    [onlyPost showWith:_r0];
+    [[PostViewController getInstance] showWith:_r0];
     [self addAlertTitle:@"提示" andMsg:@"已跳转到编辑页面!" andComfirm:@"确定"];
 }
 
 -(void)removeItem0{
     self.tabBarController.selectedIndex=0;//tabBarController
-    [store0 removeItem0:_r0];
+    [[RecordStorage getInstance] removeItem0:_r0];
     _r0 = nil;
     [self clearInput];
-    //[store0 readFromCache];
-    [table reloadData];
-    [nav1 popToRootViewControllerAnimated:YES];
+    //[[RecordStorage getInstance] readFromCache];
+    [[FindViewController getInstance].tableview reloadData];
+    [[FindViewController getInstance].nav popToRootViewControllerAnimated:YES];
     //[self addAlertTitle:@"提示" andMsg:@"已删除该条打卡!" andComfirm:@"确定"];
     UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"提示" message:@"已删除该条打卡!" preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *comfirmAc = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil];
     [alertVC addAction:comfirmAc];
-    [vc1 presentViewController:alertVC animated:YES completion:nil];
+    [[FindViewController getInstance] presentViewController:alertVC animated:YES completion:nil];
 }
 
 -(void)reloadImg{
@@ -373,24 +362,24 @@ didFinishPickingMediaWithInfo:(NSDictionary<NSString*,id>*)info {
         for(int i = 0; i < self.imgs.count; ++i){
             [list addObject:self.imgs[i]];
         }
-        [store0 storeWithList:list withDic:self.r0];
+        [[RecordStorage getInstance] storeWithList:list withDic:self.r0];
         //[self.store readFromCache];
-        [table reloadData];
+        [[FindViewController getInstance].tableview reloadData];
         NSLog(@"store");
         // 发现页面先返回根视图tableView（如果当前页面不是tableView）
-        [nav1 popToRootViewControllerAnimated:YES];
+        [[FindViewController getInstance].nav popToRootViewControllerAnimated:YES];
         // 发现页返回顶部并更新数据源
-        //[vc1 returnTop];
+        //[[FindViewController getInstance] returnTop];
         // 转到发现页面
         self.tabBarController.selectedIndex=0;//tabBarController
-        PostViewController *dectrl = [[PostViewController alloc] initWithItem:store0.records[0]];
+        PostViewController *dectrl = [[PostViewController alloc] initWithItem:[RecordStorage getInstance].records[0]];
         [dectrl setEditorButton];
         // 再进入打卡详情页面，查看最新打卡
-        [nav1 pushViewController:dectrl animated:YES];
+        [[FindViewController getInstance].nav pushViewController:dectrl animated:YES];
         // 0.5s的弹窗
         UIAlertController *alert1 = [UIAlertController alertControllerWithTitle:@"提示" message:@"发布成功" preferredStyle:UIAlertControllerStyleAlert];
         // 弹窗以浮动形式加到vc1
-        [vc1 presentViewController:alert1 animated:YES completion:nil];
+        [[FindViewController getInstance] presentViewController:alert1 animated:YES completion:nil];
         [self performSelector:@selector(delayAlert1) withObject:nil afterDelay:0.5f];
         // 清除输入框和图片
         [self clearInput];
@@ -402,7 +391,7 @@ didFinishPickingMediaWithInfo:(NSDictionary<NSString*,id>*)info {
 }
 // 去除弹窗
 -(void) delayAlert1{
-    [vc1 dismissViewControllerAnimated:YES completion:nil];
+    [[FindViewController getInstance] dismissViewControllerAnimated:YES completion:nil];
 }
 
 // 清空按钮
@@ -419,4 +408,5 @@ didFinishPickingMediaWithInfo:(NSDictionary<NSString*,id>*)info {
     [alertVC addAction:comfirmAc2];
     [self presentViewController:alertVC animated:YES completion:nil];
 }
+
 @end

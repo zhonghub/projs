@@ -10,6 +10,16 @@
 #import "RecordStorage.h"
 
 @implementation RecordStorage
+// 单例
++ (RecordStorage *)getInstance{
+    static RecordStorage *instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[self alloc] init];
+    });
+    return instance;
+}
+
 -init{
     // cache路径
     NSString *cacheDir =[NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask,YES) lastObject];

@@ -10,6 +10,7 @@
 #define PostViewController_h
 #import <UIKit/UIKit.h>
 #import "RecordStorage.h"
+#import "FindViewController.h"
 
 @interface PostViewController : UIViewController<UINavigationControllerDelegate,UIImagePickerControllerDelegate>
 @property(nonatomic,strong) UIView *view1;
@@ -23,11 +24,8 @@
 @property(nonatomic,strong) UIImagePickerController *imagePicker;// 图片选择控制器
 @property(nonatomic,strong) CAGradientLayer * gradient;// 渐变层
 @property(nonatomic,strong) NSDictionary * r0;
--(void) setOnlyPost;
--(void) setTableView:(UITableView *) table0;
--(void) setStore:(RecordStorage *) store1;
--(void) setVc1:(UIViewController *) vc;
--(void) setVc1Nav:(UINavigationController *) nav;
+
++ (PostViewController *)getInstance;
 -(void) setAddButton; // 打卡页面使用，设置添加图片按钮
 -(void) showWith:(NSDictionary *) r1; // 详情页面使用，将记录r1展示出来
 -(void) closeInput;

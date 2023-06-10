@@ -19,6 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic,strong) NSString * listCachePath;// 文本cache路径
 @property(nonatomic) NSMutableArray * records;
 @property(nonatomic) NSArray * itemList;
++ (RecordStorage *)getInstance;
 -(void) initCache;
 -(void) readFromCache;
 -(void) storeWithList:(NSMutableArray *)list0 withDic:(NSDictionary *)dic0;

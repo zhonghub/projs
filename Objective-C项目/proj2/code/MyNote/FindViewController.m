@@ -1,5 +1,5 @@
 //
-//  findViewController.m
+//  FindViewController.m
 //  hw2
 //
 //  Created by sushan on 2022/9/20.
@@ -10,6 +10,16 @@
 #import "FindViewController.h"
 
 @implementation FindViewController
+
++ (FindViewController *)getInstance{
+    static FindViewController *instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[self alloc] init];
+    });
+    return instance;
+}
+
 - init{
     self.navigationItem.title =@"打卡清单";
     [self setUI];//设置渐变色图层

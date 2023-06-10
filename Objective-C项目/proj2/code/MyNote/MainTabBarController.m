@@ -17,24 +17,16 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    _store = [[RecordStorage alloc] init];//初始化数据源
-    _vc1 = [[FindViewController alloc] init];
-    _vc2 = [[PostViewController alloc] init];
+    _store = [RecordStorage getInstance];//初始化数据源
+    _vc1 = [FindViewController getInstance];
+    _vc2 = [PostViewController getInstance];
     _vc3 = [[UserViewController alloc] init];
-    [_vc2 setOnlyPost];
-    [_vc2 setTableView:_vc1.tableview];
-    [_vc2 setStore:_store];
-    [_vc2 setVc1:_vc1];
-    [_vc2 setVc1Nav:_vc1.nav];
     _vc1.store = _store;
-    _vc2.store = _store;
     _vc3.store = _store;
     _vc3.tableview = _vc1.tableview;
     // 将3个vc添加到MainTabBarController
     NSArray *array = @[_vc1.nav, _vc2.nav, _vc3.nav];
     self.viewControllers = array;
-    [_vc2 setAddButton];
-    [_vc2 setBtnClearAndPost];
     // 设置标签栏按钮的图像和文字
     [self setTabBarItem];
     
