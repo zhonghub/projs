@@ -6,6 +6,7 @@
 #include <cppconn/driver.h>
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
+
 #include<iostream>
 #include <chrono>
 #include <ctime>
@@ -13,17 +14,24 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <WinSock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib") // 链接到WS2_32库
 
 namespace my_sql_use {
     /*
     获取当前时间
     */
     std::string getCurrentTimeAsString();
-
+    /*
+    获取当前IP
+    */
+    std::string getLocalIPAddress();
     /*
     将一个字符串以"#"分割成多个子串
     */
     std::vector<std::string> splitString(const std::string& input, char delimiter);
+
 }
 
 

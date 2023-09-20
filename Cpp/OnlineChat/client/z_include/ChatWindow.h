@@ -1,8 +1,6 @@
 #ifndef CHATWINDOW_H
 #define CHATWINDOW_H
 
-#include "Client2.h"
-#include "myUseFun.h"
 
 #include <QMainWindow>
 #include <QTextEdit>
@@ -11,10 +9,7 @@
 #include <QVBoxLayout>
 #include <QKeyEvent>
 #include <string>
-#include <vector>
-#include <sstream>
 #include <mutex>
-#include <WinSock2.h>
 
 
 // 定义一个互斥量，用于保护对QWidget的访问
@@ -25,12 +20,20 @@ class ChatWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    Client2* client2;
+    QPushButton* sendButton;
+    QPushButton* getButton;
+
     ChatWindow(QWidget* parent = nullptr);
 
-private slots:
-    void onSendMessage();
-    void onGetMessage();
+    QString getMsg() {
+        return messageInput->toPlainText();
+    }
+    void clearMsg() {
+        messageInput->clear();
+    }
+    void setChatText(std::string recv) {
+        chatDisplay->setText(QString::fromStdString(recv));
+    }
 
 public slots:
     void updateGui1(const QString& newMsg)
@@ -39,15 +42,12 @@ public slots:
         std::lock_guard<std::mutex> lock(guiMutex1);
         // 更新QWidget的状态或执行其他GUI操作
         this->chatDisplay->append(newMsg);
-        // lineEdit1->setText(QString::fromStdString(newVector));
     }
 
 private:
 
     QTextEdit* chatDisplay;
     QTextEdit* messageInput;
-    QPushButton* sendButton;
-    QPushButton* getButton;
 
     void setUI();
 

@@ -15,8 +15,10 @@ SOURCES += main.cpp \
     sql.cpp \
     server.cpp \
     MyWindow.cpp \
+    ServerController.cpp \
 
 HEADERS +=  server.h \
     sql.h \
     MyWindow.h \
+    ServerController.h \
 

@@ -1,16 +1,13 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include "ChatWindow.h"
 #include "myUseFun.h"
 
 #include <iostream>
 #include <WinSock2.h>
 #include <thread>
 #include <string>
-#include <QTextEdit>
-#include <sstream>
-#include <mutex>
+
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -20,7 +17,7 @@ private:
     static Client* instance;
     std::string server_ip;// 服务器ip
     int server_port;// 服务器监听的端口号
-    SOCKET clientSocket;// 专门用于接收新消息的套接字
+    SOCKET clientSocket0;// 专门用于接收新消息的套接字
     WSADATA wsaData;
 
     Client() {
@@ -30,15 +27,13 @@ private:
     }
 
 public:
-    ChatWindow* myWindow;
     std::string username;
 
     ~Client() {
         clearSocket();
     }
 
-    void setUserName(const std::string& username0, ChatWindow* myWindow0) {
-        this->myWindow = myWindow0;
+    void setUserName(const std::string& username0) {
         this->username = username0;
     }
 
@@ -53,9 +48,14 @@ public:
 
     std::string initSocket();
 
+    SOCKET& getSocket() {
+        return clientSocket0;
+    }
+
+
     // 关闭套接字并清理资源
     void clearSocket() {
-        closesocket(clientSocket);
+        closesocket(clientSocket0);
         WSACleanup();
     }
 
@@ -64,12 +64,6 @@ public:
         this->server_port = port_server;
         initSocket();
     }
-
-    /*
-    子线程专门接收服务器广播的新消息
-    并更新UI
-    */
-    void Receive_New_Messages();
 
     // 接收来自服务器的回复，可能是长度超出1024字节的字符串
     std::string ReceiveLongMessages(SOCKET clientSocket);

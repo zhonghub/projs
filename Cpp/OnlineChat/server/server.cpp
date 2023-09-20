@@ -10,12 +10,6 @@ Server* Server::getInstance() {
     return instance; // 返回现有实例
 }
 
-void Server::setWindow(MyWindow* m) {
-    this->myWindow = m;
-    //std::thread receiveThread(&Server::main_server, this);
-    //receiveThread.detach();
-}
-
 // 添加新用户到在线用户列表
 void Server::AddUser(SOCKET clientSocket, const std::string& username) {
     UserInfo user;
@@ -225,27 +219,17 @@ void Server::SendBatchedMessages() {
 }
 
 
-/*
- `main` 函数的思路是：
-创建服务器套接字并开始监听连接，然后通过创建多线程来处理客户端的通信。
-1. 主线程使用HandleClient子线程 处理每个客户端的消息收发，
-2. 另一个SendBatchedMessages线程 定期发送批量消息给所有客户端。
-从而服务器能够并发处理多个客户端的连接和通信。
-*/
-int Server::main_server() {
-    // 获取当前线程
-    // QThread* currentThread = QThread::currentThread();
-    // 将对象移动到当前线程
-    // myWindow->moveToThread(currentThread);
+int Server::init(MyWindow* m) {
+    this->myWindow = m;
 
     // 1. 初始化 Winsock：通过调用 `WSAStartup` 函数，初始化 Windows 套接字库，确保能够在程序中使用网络功能。
-    WSADATA wsData;
+    // WSADATA wsData;
     if (WSAStartup(MAKEWORD(2, 2), &wsData) != 0) {
         std::cerr << "Failed to initialize Winsock." << std::endl;
         return 1;
     }
     // 2. 创建服务器套接字
-    SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == INVALID_SOCKET) {
         std::cerr << "Failed to create server socket." << std::endl;
         WSACleanup();
@@ -254,7 +238,7 @@ int Server::main_server() {
     // 3. 绑定服务器套接字
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(PORT);
+    serverAddr.sin_port = htons(std::stoi(myWindow->server_port));
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(serverSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
@@ -270,17 +254,30 @@ int Server::main_server() {
         WSACleanup();
         return 1;
     }
-    std::cout << "Server is listening on port " << PORT << "..." << std::endl;
+    std::cout << "Server is listening on port " << myWindow->server_port << "..." << std::endl;
+}
+
+/*
+ `main` 函数的思路是：
+创建服务器套接字并开始监听连接，然后通过创建多线程来处理客户端的通信。
+1. 主线程使用HandleClient子线程 处理每个客户端的消息收发，
+2. 另一个SendBatchedMessages线程 定期发送批量消息给所有客户端。
+从而服务器能够并发处理多个客户端的连接和通信。
+*/
+int Server::main_server() {
+    std::cout << "Server start!\n\n";
+    shouldExit = false;
 
     // 5. 创建新消息广播线程SendBatchedMessages
     std::thread batchThread(&Server::SendBatchedMessages,this);
     batchThread.detach();
 
     // 6. 循环等待客户端连接，监听新的客户端套接字连接
-    while (true) {
+    while (!shouldExit) {
         SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
         if (clientSocket == INVALID_SOCKET) {
             std::cerr << "Failed to accept client connection." << std::endl;
+            // break;
             continue;
         }
         // 为每个客户端套接字连接分配一个HandleClient线程处理
@@ -290,6 +287,6 @@ int Server::main_server() {
     // 7. 清理资源
     closesocket(serverSocket);
     WSACleanup();
-
+    std::cout << "Server end!\n\n";
     return 0;
 }

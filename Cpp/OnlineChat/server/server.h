@@ -4,6 +4,8 @@
 #include "sql.h"
 #include "MyWindow.h"
 
+#include <atomic>
+
 #include <iostream>
 #include <winsock2.h>
 #include <thread>
@@ -12,15 +14,21 @@
 #include <condition_variable>
 #include <QTextEdit>
 #include <QThread>
+
 #pragma comment(lib, "ws2_32.lib")
+
 
 struct UserInfo {
 	SOCKET clientSocket;
 	std::string username;
 };
 
+
 class Server {
 private:
+	WSADATA wsData;
+	SOCKET serverSocket;
+
 	MyWindow* myWindow;
 	//QTextEdit* lineEdit1;
 	//QTextEdit* lineEdit2;
@@ -28,7 +36,7 @@ private:
 	static Server* instance;
 
 	// 服务器监听的端口号
-	const int PORT = 12345;
+	// const int PORT = 12345;
 	// 服务器所能够同时处理的最大客户端连接数
 	const int MAX_CLIENTS = 20;
 	// 每个批量消息的大小
@@ -76,8 +84,10 @@ private:
 	*/
 	std::condition_variable batchCondition;
 
+	std::atomic<bool> shouldExit;
+
 public:
-	void setWindow(MyWindow* m);
+	int init(MyWindow* m);
 
 	static Server* getInstance();
 
@@ -93,5 +103,9 @@ public:
 	void SendBatchedMessages();
 
 	int main_server();
+
+	void stopServer() {
+		shouldExit = true;
+	}
 };
 #endif // server_H

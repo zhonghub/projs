@@ -11,17 +11,17 @@ TARGET = client
 
 TEMPLATE = app
 
-SOURCES += ChatWindow.cpp \
-    mainwindow.cpp \
-    Client.cpp \
-    Client2.cpp \
-    myUseFun.cpp \
-    main.cpp
+SOURCES += z_src/ChatWindow.cpp \
+    z_src/MainWindow.cpp \
+    z_src/Client.cpp \
+    z_src/ClientController.cpp \
+    z_src/myUseFun.cpp \
+    z_src/main.cpp
 
-HEADERS += mainwindow.h \
-    chatWindow.h \
-    Client.h \
-    Client2.h \
-    myUseFun.h \
+HEADERS += z_include/MainWindow.h \
+    z_include/ChatWindow.h \
+    z_include/Client.h \
+    z_include/ClientController.h \
+    z_include/myUseFun.h \
 
 

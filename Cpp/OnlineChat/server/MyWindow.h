@@ -1,14 +1,24 @@
 #ifndef MYWINDOW_H
 #define MYWINDOW_H
 
+#include "sql.h"
+
 #include <QMenuBar>
 #include <QHBoxLayout>
 #include <QMainWindow>
 #include <QTextEdit>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QVBoxLayout>
+#include <QDebug>
+#include <QLabel>
+#include <QMessageBox>
+
 #include <vector>
 #include <string>
 #include <thread>
 #include <mutex>
+
 
 // 定义一个互斥量，用于保护对QWidget的访问
 static std::mutex guiMutex1;
@@ -22,8 +32,12 @@ public:
     MyWindow(QWidget* parent = nullptr); // 私有构造函数
     static MyWindow* getInstance(QWidget* parent = nullptr);
 
+    std::string server_ip;
+    std::string server_port;
     QTextEdit* lineEdit1;
     QTextEdit* lineEdit2;
+    QAction* startAction;
+    QAction* stopAction;
 
 public slots:
     void updateGui1(const QString& newVector)
@@ -43,17 +57,11 @@ public slots:
     }
 
 private slots:
-    void onOption1Clicked()
-    {
-        // 处理选项1的点击事件
-        lineEdit1->setText("Clear the messages!");
-    }
-
-    void onOption2Clicked()
-    {
-        // 处理选项2的点击事件
-        lineEdit2->setText("Clear the users!");
-    }
+    void onOption1Clicked();
+    void onOption2Clicked();
+    void handleSetPort();
+    // void getIP();
+   
 
 private:
     // MyWindow(QWidget* parent = nullptr); // 私有构造函数
@@ -62,6 +70,13 @@ private:
     QMenu* fileMenu;
     QAction* openAction;
     QAction* exitAction;
+
+    QMainWindow* setIPWindow;
+    QLineEdit* ipLineEdit;
+    QLineEdit* portLineEdit;
+    QPushButton* setButton;
+    void MyWindow::setPortWindow();
 };
+
 
 #endif // MYWINDOW_H
