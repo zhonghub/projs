@@ -16,12 +16,16 @@ SOURCES += z_src/ChatWindow.cpp \
     z_src/Client.cpp \
     z_src/ClientController.cpp \
     z_src/myUseFun.cpp \
-    z_src/main.cpp
+    z_src/main.cpp \
+    include\jsoncpp.cpp
 
 HEADERS += z_include/MainWindow.h \
     z_include/ChatWindow.h \
     z_include/Client.h \
     z_include/ClientController.h \
     z_include/myUseFun.h \
+    include\json\json.h \
+    include\json\json-forwards.h \
+
 
 

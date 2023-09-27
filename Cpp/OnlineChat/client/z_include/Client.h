@@ -68,6 +68,9 @@ public:
     // 接收来自服务器的回复，可能是长度超出1024字节的字符串
     std::string ReceiveLongMessages(SOCKET clientSocket);
 
+    // 发送长字符串
+    bool Client::SendLongMessages(SOCKET clientSocket, std::string replyString);
+
     // 主线程发送消息给服务器
     std::string sendStrToServer(std::string message);
 

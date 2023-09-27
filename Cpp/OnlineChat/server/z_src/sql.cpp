@@ -1,7 +1,13 @@
-#include "z_include/myUseFun.h"
+#include "z_include/sql.h"
 
-// 获取当前时间点
-std::string myUse::getCurrentTimeAsString() {
+// 静态变量初始化
+SQL_con* SQL_con::instance = nullptr;
+
+/*
+ 获取当前时间
+*/
+std::string my_sql_use::getCurrentTimeAsString() {
+    // 获取当前时间点
     auto now = std::chrono::system_clock::now();
     // 将时间点转换为time_t类型
     std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
@@ -15,8 +21,52 @@ std::string myUse::getCurrentTimeAsString() {
     return std::string(timeStr);
 }
 
-// 将key-value键值对转换成一个JSON字符串
-std::string myUse::generateJsonString(const std::vector<std::string>& key, const std::vector<std::string>& value) {
+/*
+* 获取当前ip
+*/
+std::string my_sql_use::getLocalIPAddress() {
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cerr << "Failed to initialize Winsock." << std::endl;
+        return "";
+    }
+
+    char hostName[256];
+    if (gethostname(hostName, sizeof(hostName)) != 0) {
+        std::cerr << "Failed to get hostname." << std::endl;
+        WSACleanup();
+        return "";
+    }
+
+    struct addrinfo hints;
+    struct addrinfo* result = nullptr;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET; // IPv4
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (getaddrinfo(hostName, nullptr, &hints, &result) != 0) {
+        std::cerr << "Failed to get address info." << std::endl;
+        WSACleanup();
+        return "";
+    }
+
+    struct sockaddr_in* saddr = reinterpret_cast<struct sockaddr_in*>(result->ai_addr);
+    const char* ip = inet_ntoa(saddr->sin_addr); // 将IP地址转换为字符串
+
+    freeaddrinfo(result);
+    WSACleanup();
+
+    if (ip != nullptr) {
+        return std::string(ip);
+    }
+    else {
+        std::cerr << "Failed to convert IP address to string." << std::endl;
+        return "";
+    }
+}
+
+
+std::string my_sql_use::generateJsonString(const std::vector<std::string>& key, const std::vector<std::string>& value) {
     // 创建一个Json::Value对象来表示JSON数据
     Json::Value root;
     if (key.size() != value.size()) {
@@ -33,8 +83,7 @@ std::string myUse::generateJsonString(const std::vector<std::string>& key, const
     return jsonString;
 }
 
-// 将JSON字符串转换成key-value键值
-std::vector<std::string> myUse::parseFromJsonString(std::string jsonStr, std::vector<std::string> & key) {
+std::vector<std::string> my_sql_use::parseFromJsonString(std::string jsonStr, std::vector<std::string>& key) {
     std::vector<std::string> value;
     // 解析JSON字符串并提取用户名和密码
     Json::CharReaderBuilder reader;
@@ -53,8 +102,7 @@ std::vector<std::string> myUse::parseFromJsonString(std::string jsonStr, std::ve
     return value;
 }
 
-// 将JSON字符串转换成key-value键值
-std::map<std::string, std::string> myUse::parseFromJsonString2(std::string jsonStr, std::vector<std::string>& key) {
+std::map<std::string, std::string> my_sql_use::parseFromJsonString2(std::string jsonStr, std::vector<std::string>& key) {
     std::map<std::string, std::string> value;
     // 解析JSON字符串并提取用户名和密码
     Json::CharReaderBuilder reader;

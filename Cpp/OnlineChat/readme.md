@@ -19,13 +19,9 @@ https://github.com/zhonghub/projs/tree/main/Cpp/OnlineChat
 
 #### 2 服务器
 
-UI层：显示累计发布的新消息，以及当前的在线用户
+**UI层**：显示累计发布的新消息，以及当前的在线用户
 
-业务逻辑层：
-
-处理每个客户端发送的各种请求（注册，登录，发布消息，获取全部消息，建立专门接收新消息的TCP连接）并作出相应回复，
-
-同时广播新消息给每个在线用户。
+**业务逻辑层：**处理每个客户端发送的各种请求（注册，登录，发布消息，获取全部消息，建立专门接收新消息的TCP连接）并作出相应回复，同时广播新消息给每个在线用户。
 
 | <img src="imgs/image-20230920132621011.png" alt="image-20230920132621011" style="zoom:50%;" /> | <img src="imgs/image-20230920132717633.png" alt="image-20230920132717633" style="zoom:60%;" /> |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -44,7 +40,40 @@ UI层：显示累计发布的新消息，以及当前的在线用户
    2. V是纯UI界面，采用QT实现。
    3. C是控制器，客户端和服务器均有一个Controller，负责M和V的间接交互。M和V直接是隔离的（解耦合），相互影响均通过Controller来实现，以客户端为例，客户端V的某些button绑定事件，又或者业务逻辑（接收到新消息）导致UI需要更新。
 
-   
+
+#### 4 消息格式
+
+##### json库配置：
+
+使用jsoncpp实现：将客户端发送消息的键值对转换为**json字符串**，以及从**json字符串**解析为消息的键值对。
+
+c++json库项目地址： [GitHub - open-source-parsers/jsoncpp: A C++ library for interacting with JSON.](https://github.com/open-source-parsers/jsoncpp)
+
+c++json库（jsoncpp）简单使用方法：https://blog.csdn.net/luxpity/article/details/116809954
+
+操纵
+
+1. 打开下载的**jsoncpp**文件夹
+2. 运行**amalgamate.py**文件（需要有python环境）
+3. 生成了一个dist的文件夹，里面的两个.h文件和一个.cpp文件分别加入项目的头文件和源文件中，一起编译即可。
+
+##### 消息说明
+
+客户端发送的json字符串的key值最多有5个：key = ["code",username","password","time","msg"];
+
+根据接收消息的code值对数据库进行相应操作，并返回操作结果
+code, 请求编号： 
+    0：专门接收新消息的套接字
+    1：登录
+    2：注册
+    3：发布消息
+    4：请求全部历史消息
+username, 用户名 
+password，密码
+time，时间
+msg, 消息
+
+
 
 ### 二 项目构建和运行
 
@@ -66,19 +95,21 @@ TARGET = client
 
 TEMPLATE = app
 
-SOURCES += ChatWindow.cpp \
-    mainwindow.cpp \
-    Client.cpp \
-    Client2.cpp \
-    myUseFun.cpp \
-    main.cpp
+SOURCES += z_src/ChatWindow.cpp \
+    z_src/MainWindow.cpp \
+    z_src/Client.cpp \
+    z_src/ClientController.cpp \
+    z_src/myUseFun.cpp \
+    z_src/main.cpp \
+    include\jsoncpp.cpp
 
-HEADERS += mainwindow.h \
-    chatWindow.h \
-    Client.h \
-    Client2.h \
-    myUseFun.h \
-
+HEADERS += z_include/MainWindow.h \
+    z_include/ChatWindow.h \
+    z_include/Client.h \
+    z_include/ClientController.h \
+    z_include/myUseFun.h \
+    include\json\json.h \
+    include\json\json-forwards.h \
 ```
 
 

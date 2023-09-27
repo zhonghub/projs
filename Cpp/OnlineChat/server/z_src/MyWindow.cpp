@@ -1,4 +1,4 @@
-#include "mywindow.h"
+#include "z_include/mywindow.h"
 
 MyWindow* MyWindow::instance = nullptr; // 初始化静态指针为 nullpt
 
@@ -37,7 +37,9 @@ MyWindow::MyWindow(QWidget* parent)
     // 创建文本框
     QHBoxLayout* layout = new QHBoxLayout;
     lineEdit1 = new QTextEdit(this);
+    // lineEdit1->setText("Server is not started!");
     lineEdit2 = new QTextEdit(this);
+    lineEdit2->setText("There is not user online!");
 
     lineEdit1->setReadOnly(true);
     lineEdit2->setReadOnly(true);  // 第二个文本框设置为只读
@@ -61,8 +63,8 @@ MyWindow::MyWindow(QWidget* parent)
 void MyWindow::onOption1Clicked()
 {
     // 处理选项1的点击事件
-    setPortWindow();
-    setIPWindow->show();
+    getSetPortWindow();
+    setPortWindow->show();
 }
 
 void MyWindow::onOption2Clicked()
@@ -74,36 +76,36 @@ void MyWindow::onOption2Clicked()
 /*
 设置绑定服务器IP和端口号
 */
-void MyWindow::setPortWindow() {
-    setIPWindow = new QMainWindow();
-    setIPWindow->resize(550, 350);  // 设置窗口大小为800x600
+void MyWindow::getSetPortWindow() {
+    setPortWindow = new QMainWindow(this);
+    setPortWindow->resize(550, 350);  // 设置窗口大小为800x600
 
-    setIPWindow->setWindowTitle("绑定IP和端口号");
+    setPortWindow->setWindowTitle("绑定IP和端口号");
 
-    QWidget* centralWidget = new QWidget(setIPWindow);
-    setIPWindow->setCentralWidget(centralWidget);
+    QWidget* centralWidget = new QWidget(setPortWindow);
+    setPortWindow->setCentralWidget(centralWidget);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
     // 居中
     mainLayout->setAlignment(Qt::AlignHCenter);
 
     // 服务器IP
-    QLabel* usernameLabel = new QLabel("服务器IP: ", setIPWindow);
-    ipLineEdit = new QLineEdit(setIPWindow);
+    QLabel* usernameLabel = new QLabel("服务器IP: ", setPortWindow);
+    ipLineEdit = new QLineEdit(setPortWindow);
     ipLineEdit->setReadOnly(true);
     mainLayout->addWidget(usernameLabel);
     mainLayout->addWidget(ipLineEdit);
 
     // 端口号
-    QLabel* passwordLabel = new QLabel("端口: ", setIPWindow);
-    portLineEdit = new QLineEdit(setIPWindow);
+    QLabel* passwordLabel = new QLabel("端口: ", setPortWindow);
+    portLineEdit = new QLineEdit(setPortWindow);
     mainLayout->addWidget(passwordLabel);
     mainLayout->addWidget(portLineEdit);
 
     // Buttons
     QHBoxLayout* buttonLayout = new QHBoxLayout();
 
-    setButton = new QPushButton("设置端口号", setIPWindow);
+    setButton = new QPushButton("设置端口号", setPortWindow);
     connect(setButton, &QPushButton::clicked, this, &MyWindow::handleSetPort);
     buttonLayout->addWidget(setButton);
 
@@ -124,19 +126,19 @@ void MyWindow::setPortWindow() {
     portLineEdit->setText(QString::fromStdString(server_port));//QString::fromStdString(server_port + "111")
 
     //std::string str1 = "Server: " + server_ip + "    Port: " + server_port;
-    //setIPWindow->setWindowTitle(QString::fromStdString(str1));
+    //setPortWindow->setWindowTitle(QString::fromStdString(str1));
 
 }
 
 void MyWindow::handleSetPort() {
     if (portLineEdit->text().isEmpty()) {
-        QMessageBox::critical(this->setIPWindow, "警告", "端口号不能为空!");
+        QMessageBox::critical(this->setPortWindow, "警告", "端口号不能为空!");
     }
     else {
         server_port = portLineEdit->text().toStdString();
         std::string str1 = "Server: " + server_ip + "    Port: " + server_port;
         setWindowTitle(QString::fromStdString(str1));
-        setIPWindow->setWindowTitle(QString::fromStdString(str1));
+        setPortWindow->setWindowTitle(QString::fromStdString(str1));
         QMessageBox::information(this, "提示", QString::fromStdString("设置成功!"));
     }
 }

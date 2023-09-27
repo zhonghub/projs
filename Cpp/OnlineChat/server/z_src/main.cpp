@@ -1,6 +1,6 @@
 #include <QApplication>
 
-#include "ServerController.h"
+#include "z_include/ServerController.h"
 
 int main(int argc, char* argv[]) {
 
@@ -12,6 +12,7 @@ int main(int argc, char* argv[]) {
     ServerController myController;
     myController.myWindow->show();
     QMessageBox::information(myController.myWindow, "Information", QString::fromStdString("Port is not set!"));
+
     /*
     myController.mainServer->init(myController.myWindow);
     std::thread receiveThread(&Server::main_server, myController.mainServer);

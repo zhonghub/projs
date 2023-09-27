@@ -114,7 +114,8 @@ void MainWindow::setWindow() {
 设置绑定服务器IP和端口号
 */
 void MainWindow::setWindow2() {
-    setIPWindow = new QMainWindow();
+    setIPWindow = new QMainWindow(this);
+
     setIPWindow->resize(550, 350);  // 设置窗口大小为800x600
 
     setIPWindow->setWindowTitle("绑定IP和端口号");

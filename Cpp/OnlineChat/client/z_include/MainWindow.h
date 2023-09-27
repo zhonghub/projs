@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "myUseFun.h"
+
 #include <QMainWindow>
 #include <QPushButton>
 #include <QLineEdit>
@@ -10,6 +12,7 @@
 #include <QDebug>
 #include <QLabel>
 #include <QMessageBox>
+
 
 /*
 登录/注册界面

@@ -1,4 +1,4 @@
-#include "ServerController.h"
+#include "z_include/ServerController.h"
 
 ServerController::ServerController() {
     std::string server = "tcp://localhost:3306"; // or "tcp://127.0.0.1:3306"
@@ -24,10 +24,12 @@ ServerController::~ServerController() {
 }
 
 void ServerController::handleStart() {
-    mainServer->init(myWindow);
-    std::thread receiveThread(&Server::main_server, mainServer);
-    receiveThread.detach();
-    QMessageBox::information(this->myWindow, "Information", QString::fromStdString("Server is started!"));
+    if (mainServer->shouldExit) {
+        mainServer->init(myWindow);
+        std::thread receiveThread(&Server::main_server, mainServer);
+        receiveThread.detach();
+        QMessageBox::information(this->myWindow, "Information", QString::fromStdString("Server is started!"));
+    }
 }
 
 void ServerController::handleStop() {

@@ -62,6 +62,22 @@ std::string Client::ReceiveLongMessages(SOCKET clientSocket) {
     return replyString;
 }
 
+/*
+发送长字符串
+*/
+bool Client::SendLongMessages(SOCKET clientSocket, std::string replyString) {
+    const int chunkSize = 1024; // 每个数据块的大小
+    for (int i = 0; i < replyString.size(); i += chunkSize) {
+        int bytesToSend = chunkSize < static_cast<int>(replyString.size() - i) ? chunkSize : static_cast<int>(replyString.size() - i);
+        std::string chunk = replyString.substr(i, bytesToSend);
+        int bytesSent = send(clientSocket, chunk.c_str(), bytesToSend, 0);
+        if (bytesSent == SOCKET_ERROR) {
+            // 处理发送错误
+            break;
+        }
+    }
+    return true;
+}
 
 /*
 主线程发送消息给服务器
@@ -97,7 +113,8 @@ std::string Client::sendStrToServer(std::string message) {
     }
 
     // 5. 将字符串发送给服务器
-    send(clientSocket, message.c_str(), message.size(), 0);
+    // send(clientSocket, message.c_str(), message.size(), 0);
+    SendLongMessages(clientSocket, message);
     std::cout << "Send str: " << message << std::endl;
 
     // 6. 接收来自服务器的回复

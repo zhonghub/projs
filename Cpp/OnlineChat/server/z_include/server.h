@@ -10,6 +10,8 @@
 #include <winsock2.h>
 #include <thread>
 #include <vector>
+#include <list>
+#include <map>
 #include <mutex>
 #include <condition_variable>
 #include <QTextEdit>
@@ -26,12 +28,13 @@ struct UserInfo {
 
 class Server {
 private:
+	std::vector<std::string> key;
+
 	WSADATA wsData;
 	SOCKET serverSocket;
 
 	MyWindow* myWindow;
-	//QTextEdit* lineEdit1;
-	//QTextEdit* lineEdit2;
+
 	std::string newMsg;
 	static Server* instance;
 
@@ -48,7 +51,7 @@ private:
 	每当有新的监听新消息的客户端连接时，会将其套接字添加到这个vector中。
 	在 HandleClient函数中，当客户端断开连接时，会从这个vector中移除对应的监听新消息的套接字。
 	*/
-	std::vector<UserInfo> onlineUsers;
+	std::list<UserInfo> onlineUsers;
 
 	/*
 	向量messageBatch 用于积累待发送的消息，以便在满足一定条件后进行批量发送。
@@ -84,9 +87,12 @@ private:
 	*/
 	std::condition_variable batchCondition;
 
-	std::atomic<bool> shouldExit;
+
+	Server();
 
 public:
+	std::atomic<bool> shouldExit;
+
 	int init(MyWindow* m);
 
 	static Server* getInstance();
@@ -94,8 +100,9 @@ public:
 	void AddUser(SOCKET clientSocket, const std::string& username);
 	std::string getAllOnlineUsers();
 
-	std::string operateDatabase(std::vector<std::string>);
+	std::string operateDatabase(std::map<std::string, std::string>& map2);
 
+	std::string ReceiveLongMessages(SOCKET clientSocket);
 	bool SendLongMessages(SOCKET clientSocket, std::string replyString);
 
 	void HandleClient(SOCKET clientSocket);

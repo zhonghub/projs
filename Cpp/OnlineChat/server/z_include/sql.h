@@ -16,6 +16,11 @@
 #include <sstream>
 #include <WinSock2.h>
 #include <ws2tcpip.h>
+
+#include <map>
+
+#include <include/json/json.h>
+
 #pragma comment(lib, "ws2_32.lib") // 链接到WS2_32库
 
 namespace my_sql_use {
@@ -27,11 +32,10 @@ namespace my_sql_use {
     获取当前IP
     */
     std::string getLocalIPAddress();
-    /*
-    将一个字符串以"#"分割成多个子串
-    */
-    std::vector<std::string> splitString(const std::string& input, char delimiter);
 
+    std::string generateJsonString(const std::vector<std::string>& key, const std::vector<std::string>& value);
+    std::vector<std::string> parseFromJsonString(std::string jsonStr, std::vector<std::string>& key);
+    std::map<std::string, std::string> parseFromJsonString2(std::string jsonStr, std::vector<std::string>& key);
 }
 
 

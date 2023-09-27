@@ -1,6 +1,19 @@
-#include "server.h"
+#include "z_include/server.h"
 
 Server* Server::instance = nullptr;
+
+Server::Server() {
+    std::cout << "new server()";
+
+    myWindow = nullptr;
+    shouldExit = true;
+
+    key.push_back("code");
+    key.push_back("username");
+    key.push_back("password");
+    key.push_back("time");
+    key.push_back("msg");
+}
 
 Server* Server::getInstance() {
     if (instance == nullptr) // 如果实例尚未创建
@@ -12,6 +25,7 @@ Server* Server::getInstance() {
 
 // 添加新用户到在线用户列表
 void Server::AddUser(SOCKET clientSocket, const std::string& username) {
+    std::cout << "AddUser = " << username << "\n";
     UserInfo user;
     user.clientSocket = clientSocket;
     user.username = username;
@@ -34,53 +48,71 @@ std::string Server::getAllOnlineUsers() {
 }
 
 /*
-根据接收消息对数据库进行操作，并返回操作结果
-recvStr[0], 请求编号： 
+* 
+客户端发送的json字符串的key值最多有5个：
+key = ["code",username","password","time","msg"];
+
+根据接收消息的code值对数据库进行相应操作，并返回操作结果
+code, 请求编号： 
     0：专门接收新消息的套接字
     1：登录
     2：注册
     3：发布消息
     4：请求全部历史消息
-recvStr[1], 用户名 
-recvStr[2]，密码
-recvStr[3]，时间
+username, 用户名 
+password，密码
+time，时间
+msg, 消息
+
 */
-std::string Server::operateDatabase(std::vector<std::string> recvStr) {
+
+std::string Server::operateDatabase(std::map<std::string, std::string>& map2) {
     // 进行数据库操作
     SQL_con* sql_con = SQL_con::getInstance();
     // 回复字符串（数据库操作结果），默认操作结果成功
     std::string replyString = "ok";
-    if (recvStr.size() > 3) {
-        if (recvStr[0]._Equal("1")) {
-            bool res = sql_con->is_exist(recvStr[1]);
-            if (!res) {
-                // 登录失败
-                replyString = "Log in error! The user is not exist!\n";
-            }
-            else {
-                // 登录
-                replyString = sql_con->check_password(recvStr[1], recvStr[2]);
-            }
+    // std::cout << "code = " << map2["code"] << std::endl;
+    int code = std::stoi(map2["code"]);
+    bool res;
+    switch (code) {
+    case 0:
+
+        break;
+    case 1:
+        res = sql_con->is_exist(map2["username"]);
+        if (!res) {
+            // 登录失败
+            replyString = "Log in error! The user is not exist!\n";
         }
-        else if (recvStr[0]._Equal("2")) {
-            // 注册
-            bool res = sql_con->insert_sql("users", recvStr[1], recvStr[2], recvStr[3]);
-            // 注册失败
-            if (!res) {
-                replyString = "Register error! The user is exist!\n";
-            }
+        else {
+            // 登录
+            replyString = sql_con->check_password(map2["username"], map2["password"]);
         }
-        else if (recvStr[0]._Equal("3")) {
-            // 发布消息
-            bool res = sql_con->insert_sql("msg", recvStr[1], recvStr[2], recvStr[3]);
-            if (!res) {
-                replyString = "Send msg error!\n";
-            }
+        break;
+    case 2:
+        // 注册
+        // INSERT INTO users VALUES(0 , 'zhc' , '123' ,  '2023-09-15 10:54:23')
+        res = sql_con->insert_sql("users", map2["username"], map2["password"], map2["time"]);
+        // 注册失败
+        if (!res) {
+            replyString = "Register error! The user is exist!\n";
         }
-        else if (recvStr[0]._Equal("4")) {
-            // 返回全部历史消息
-            replyString = sql_con->select_all_msg();
+        break;
+    case 3:
+        // 发布消息
+        // insert into Msg(User_Cde, Msg, WriteTime) values('username', 'msg', 'time');
+        res = sql_con->insert_sql("msg", map2["username"], map2["msg"], map2["time"]);
+        if (!res) {
+            replyString = "Send msg error!\n";
         }
+        break;
+    case 4:
+        // 返回全部历史消息
+        replyString = sql_con->select_all_msg();
+        break;
+    default:
+        replyString = "unknow request!";
+        break;
     }
     return replyString;
 }
@@ -97,24 +129,22 @@ HandleClient 函数是用来处理与单个客户端的通信的函数。
 
 */
 void Server::HandleClient(SOCKET clientSocket) {
-    char buffer[1024];
-    int bytesReceived;
     // 循环监听消息
     while (true) {
-        bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-        if (bytesReceived <= 0) {
-            // Handle client disconnect or error
+        std::string recvString = ReceiveLongMessages(clientSocket);
+        if (recvString.empty()) {
             break;
-        }
-
-        buffer[bytesReceived] = '\0';
-        std::string recvString(buffer);
+        }        
         std::cout << "Received message: " << recvString << std::endl;
-        // 将接收消息分割成各个子部分
-        std::vector<std::string> recvStr = my_sql_use::splitString(recvString, '#');
+
+        // JSON字符串解析，将接收消息分割成各个子部分
+        std::map<std::string, std::string> map2 = my_sql_use::parseFromJsonString2(recvString, this->key);
+        // std::cout << "map.size()=" << map2.size() << std::endl;
+
         // 0表示这是一个专门接收新消息的套接字
-        if (recvStr[0]._Equal("0")) {
+        if (map2["code"]._Equal("0")) {
             {
+
                 std::lock_guard<std::mutex> lock(clientsMutex);
                 if (onlineUsers.size() >= MAX_CLIENTS) {
                     std::cerr << "Max number of clients reached." << std::endl;
@@ -122,15 +152,15 @@ void Server::HandleClient(SOCKET clientSocket) {
                     continue;
                 }
                 // 当前连接数小于最大连接数时，这个连接建立成功
-                AddUser(clientSocket, recvStr[1]);
+                AddUser(clientSocket, map2["username"]);
             }
         }
         // 回复字符串
-        std::string replyString = operateDatabase(recvStr);
-        if (recvStr[0]._Equal("3")) {
+        std::string replyString = operateDatabase(map2);
+        if (map2["code"]._Equal("3")) {
             std::unique_lock<std::mutex> lock(batchMutex);
             // 发布新消息
-            std::string newStr = recvStr[3] + "  " + recvStr[1] + ": " + recvStr[2];
+            std::string newStr = map2["time"]  + "  " + map2["username"] + ": " + map2["msg"];
             messageBatch.push_back(newStr); //("msg", recvStr[1], recvStr[2], recvStr[3]);
 
             // 更新UI
@@ -174,6 +204,33 @@ void Server::HandleClient(SOCKET clientSocket) {
 }
 
 /*
+接收来发送的消息，可能是长度超出1024字节的字符串
+*/
+std::string Server::ReceiveLongMessages(SOCKET clientSocket) {
+    std::string replyString; // 用于存储接收到的长字符串
+    const int chunkSize = 1024; // 每个数据块的大小
+    char buffer[chunkSize]; // 接收数据的缓冲区
+    while (true) {
+        int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (bytesReceived == SOCKET_ERROR) {
+            // 处理接收错误
+            break;
+        }
+        else if (bytesReceived == 0) {
+            // 连接已关闭
+            break;
+        }
+        // 将接收到的数据块添加到长字符串中
+        replyString.append(buffer, bytesReceived);
+        // 检查是否接收完整字符串
+        if (bytesReceived < chunkSize) {
+            break;
+        }
+    }
+    return replyString;
+}
+
+/*
 发送长字符串
 */
 bool Server::SendLongMessages(SOCKET clientSocket, std::string replyString) {
@@ -211,8 +268,10 @@ void Server::SendBatchedMessages() {
         messageBatch.clear();
         // 广播给所有在线用户
         for (const auto& user : onlineUsers) {
+            std::cout << "spread=" << user.username << std::endl;
             for (const std::string& message : messagesToSend) {
-                send(user.clientSocket, message.c_str(), static_cast<int>(message.size()), 0);
+                SendLongMessages(user.clientSocket, message);
+                // send(user.clientSocket, message.c_str(), static_cast<int>(message.size()), 0);
             }
         }
     }

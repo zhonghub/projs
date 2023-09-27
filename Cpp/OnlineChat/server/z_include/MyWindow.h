@@ -71,11 +71,11 @@ private:
     QAction* openAction;
     QAction* exitAction;
 
-    QMainWindow* setIPWindow;
+    QMainWindow* setPortWindow;
     QLineEdit* ipLineEdit;
     QLineEdit* portLineEdit;
     QPushButton* setButton;
-    void MyWindow::setPortWindow();
+    void MyWindow::getSetPortWindow();
 };
 
 

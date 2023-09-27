@@ -7,10 +7,8 @@ ClientController::ClientController() {
     client = Client::getInstance();
 
     mainWindow = new MainWindow();
-
     chatWindow = new ChatWindow();
     mainWindow->show();
-
 
     // 连接按钮的点击信号到槽函数
     connect(mainWindow->loginButton, &QPushButton::clicked, this, &ClientController::handleLogin);
@@ -43,9 +41,9 @@ void ClientController::handleRegister()
 /*
 登录/注册按钮绑定事件
 */
-void ClientController::handleButtonClicked(std::string i) {
+void ClientController::handleButtonClicked(std::string code) {
     QString btnAction;
-    if (i == "1") {
+    if (code == "1") {
         btnAction = "登录";
     }
     else {
@@ -59,7 +57,20 @@ void ClientController::handleButtonClicked(std::string i) {
         return;
     }
     username = user.toStdString();
-    std::string message = i + "#" + username + "#" + password.toStdString() + "#" + myUse::getCurrentTimeAsString();
+
+    std::vector<std::string> key;
+    std::vector<std::string> value;
+    key.push_back("code");
+    value.push_back(code);
+    key.push_back("username");
+    value.push_back(username);
+    key.push_back("password");
+    value.push_back(password.toStdString());
+    key.push_back("time");
+    value.push_back(myUse::getCurrentTimeAsString());
+
+    std::string message = myUse::generateJsonString(key, value);
+    //std::string message = i + "#" + username + "#" + password.toStdString() + "#" + myUse::getCurrentTimeAsString();
 
     int port = std::stoi(mainWindow->server_port);
     // 发送登录消息，并接收登录结果
@@ -70,7 +81,7 @@ void ClientController::handleButtonClicked(std::string i) {
     // 处理登录结果
     if (recv._Equal("ok")) {
         // 创建消息发布窗口
-        chatWindow->setWindowTitle(QString::fromStdString(username));
+        chatWindow->setWindowTitle(user);
         chatWindow->show();
         
         client->setUserName(username);
@@ -98,8 +109,22 @@ void ClientController::onSendMessage()
     // QString::fromStdString(recv)
     // message0.toStdString()
     QString message0 = chatWindow->getMsg();
-    std::string str1 = "3#" + chatWindow->windowTitle().toStdString() + "#"; // GetLocalIPAddress()
-    std::string message = str1 + message0.toStdString() + "#" + myUse::getCurrentTimeAsString();
+
+    std::vector<std::string> key;
+    std::vector<std::string> value;
+    key.push_back("code");
+    value.push_back("3");
+    key.push_back("username");
+    value.push_back(username);
+    key.push_back("time");
+    value.push_back(myUse::getCurrentTimeAsString());
+    key.push_back("msg");
+    value.push_back(message0.toStdString());
+
+    std::string message = myUse::generateJsonString(key, value);
+    //std::string str1 = "3#" + chatWindow->windowTitle().toStdString() + "#"; // GetLocalIPAddress()
+    //std::string message = str1 + message0.toStdString() + "#" + myUse::getCurrentTimeAsString();
+
     if (!message0.isEmpty())
     {
         std::string recv = client->sendStrToServer(message);
@@ -117,8 +142,20 @@ void ClientController::onSendMessage()
 */
 void ClientController::onGetMessage()
 {
-    std::string sendstr = "4#" + chatWindow->windowTitle().toStdString() + "#get All Msg#" + myUse::getCurrentTimeAsString();
-    std::string recv = client->sendStrToServer(sendstr);
+    std::vector<std::string> key;
+    std::vector<std::string> value;
+    key.push_back("code");
+    value.push_back("4");
+    key.push_back("username");
+    value.push_back(username);
+    key.push_back("time");
+    value.push_back(myUse::getCurrentTimeAsString());
+    key.push_back("msg");
+    value.push_back("get All Msg");
+    std::string message = myUse::generateJsonString(key, value);
+
+    // std::string sendstr = "4#" + chatWindow->windowTitle().toStdString() + "#get All Msg#" + myUse::getCurrentTimeAsString();
+    std::string recv = client->sendStrToServer(message);
     if (!recv.empty() && recv.back() == '\n') {
         recv.pop_back();
     }
@@ -129,8 +166,21 @@ void ClientController::onGetMessage()
 子线程专门接收客户端广播的新消息
 */
 void ClientController::Receive_New_Messages() {
-    std::string msg = "0#" + username + "#waiting for new msg!";
-    send(client->getSocket(), msg.c_str(), msg.size(), 0);
+    std::vector<std::string> key;
+    std::vector<std::string> value;
+    key.push_back("code");
+    value.push_back("0");
+    key.push_back("username");
+    value.push_back(username);
+    key.push_back("time");
+    value.push_back(myUse::getCurrentTimeAsString());
+    key.push_back("msg");
+    value.push_back("waiting for new msg!");
+    std::string message = myUse::generateJsonString(key, value);
+
+    // std::string message = "0#" + username + "#waiting for new msg!";
+    send(client->getSocket(), message.c_str(), message.size(), 0);
+
     std::string replyString = client->ReceiveLongMessages(client->getSocket());
     if (!replyString._Equal("ok")) {
         return;
@@ -143,10 +193,6 @@ void ClientController::Receive_New_Messages() {
             break;
         }
         std::cout << "\n子线程 Receive_New_Messages： Received: " << recv << std::endl;
-        /*
-        if (!recv.empty() && recv.back() == '\n') {
-            recv.pop_back();
-        }*/
         // 发射自定义信号来触发GUI更新
         std::lock_guard<std::mutex> lock3(guiMutex1);
         QMetaObject::invokeMethod(chatWindow, "updateGui1", Qt::QueuedConnection,
